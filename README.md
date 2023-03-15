@@ -2,6 +2,8 @@
 
 Dice Pools is a module designed for tabletop role-playing games that allows players to add custom dice pools and tension mechanics to their game sessions. This module supports a variety of dice types, including d2, d4, d6, d8, d10, d12, d20, and d100.
 
+**Manifest:https://raw.githubusercontent.com/Handyfon/dice-pools/main/module.json**
+
 ## Tension Dice
 
 The Tension Pool is a simple and effective mechanic for adding rising tension to any tabletop RPG. Players use six standard six-sided dice and a small bowl or container. During slow parts of the game, players can add a die to the Tension Pool whenever they commit to a time-consuming action, and roll the Tension Pool whenever they commit to a reckless action. When the sixth die is added, a complication is introduced, adding weight to time-wasting and reckless actions and increasing players' awareness of in-game time.
