@@ -4,7 +4,7 @@ Hooks.once('init', function() {
         hint: 'stores data',
         scope: 'world',
         config: false,
-        default: '[{"name":"DicePool","amount":1,"maxAmount":6,"diceFormat":"d6", color="#65cce6"}]',
+        default: '[{"name":"DicePool","amount":1,"maxAmount":6,"diceFormat":"d6","color":"#65cce6"}]',
         type: String,
 		onChange: onChangeData,
     });
@@ -51,7 +51,7 @@ loadDicePools();
 });
 
 async function loadDicePools(){
-	let dicePoolList = JSON.parse(await game.settings.get('dicePools', 'data'));
+	let dicePoolList =  await getdicePoolData();
 	
 	for(let i = 0; i < dicePoolList.length; i++){
 		let DPL = document.createElement("label");
@@ -86,7 +86,7 @@ async function loadDicePools(){
 
 window.dicePools = class dicePools{
 		static async newEditDicePoolDialogue(id){
-		let dicePoolList = JSON.parse(game.settings.get('dicePools', 'data'));
+		let dicePoolList = await getdicePoolData();
 		let dice = ["d1","d2","d4","d6","d8","d10","d12","d20","d100"]
 		
 		let content = `
@@ -169,10 +169,7 @@ window.dicePools = class dicePools{
 		d.render(true);
 	}
 	static async addDicePool(name, amount, diceFormat, color){
-		let dicePoolList = [];
-		
-		if(JSON.parse(game.settings.get('dicePools', 'data')).length != 0)
-			dicePoolList = JSON.parse(game.settings.get('dicePools', 'data'));
+		let dicePoolList = await getdicePoolData();
 		
 		let newDicePool = new dicePool(name, 0, amount, diceFormat, color);
 		dicePoolList.push(newDicePool);
@@ -182,10 +179,8 @@ window.dicePools = class dicePools{
 		game.settings.set('dicePools', 'data', data);
 	}
 	static async editDicePool(id, name, amount, diceFormat, color){
-		let dicePoolList = [];
-		if(JSON.parse(game.settings.get('dicePools', 'data')).length != 0)
-			dicePoolList = JSON.parse(game.settings.get('dicePools', 'data'));
-		
+		let dicePoolList = await getdicePoolData();
+
 		dicePoolList[id].name = name;
 		dicePoolList[id].maxAmount = amount;
 		
@@ -276,7 +271,8 @@ window.dicePools = class dicePools{
 }
 
 async function getdicePoolData(){
-	return JSON.parse(await game.settings.get('dicePools', 'data'));
+	const dicePoolsData = await game.settings.get('dicePools', 'data');
+	return dicePoolsData ? JSON.parse(dicePoolsData) : null;
 }
 async function saveDicePools(dicePoolList){
 		let data = JSON.stringify(dicePoolList);
