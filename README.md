@@ -8,7 +8,9 @@ Read more about this optional rule here: https://theangrygm.com/definitive-tensi
 <h1>How to use the module:</h1>
 <h2>Where is everything?</h2>
 The FoundryVTT Player-List is where all the information regarding the dice pools is displayed and edited.
+<br>
 ![Controls](https://user-images.githubusercontent.com/28778881/225436013-634330b3-3c7b-4582-aee6-71083b36c3cb.png)
 
 <h2>Adding a dice pool</h2>
+<br>
 ![Adding a dice pool](https://user-images.githubusercontent.com/28778881/225436135-52bd6df7-cc53-45da-9913-069831da420a.png)
