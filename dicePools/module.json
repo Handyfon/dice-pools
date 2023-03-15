@@ -1,0 +1,20 @@
+{
+  "title": "DicePools",
+  "description": "Track Dice Pools",
+  "url": "",
+  "version": "10.1",
+  "esmodules": [
+    "dicepools.js"
+  ],
+  "styles": [
+    "dicepools.css"
+  ],
+  "socket": true,
+  "manifest": "",
+  "download": "",
+  "id": "dicePools",
+  "compatibility": {
+    "minimum": "9",
+    "verified": "11"
+  }
+}
