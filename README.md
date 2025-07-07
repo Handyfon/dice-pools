@@ -18,7 +18,7 @@ The FoundryVTT Player-List is where all the information regarding the dice pools
 
 **Only the GM will see the controls for adding as well as editing dice and only an GM can add or remove dice from dicepools.**
 
-![Controls](https://user-images.githubusercontent.com/28778881/225436013-634330b3-3c7b-4582-aee6-71083b36c3cb.png)
+![Controls](https://raw.githubusercontent.com/Handyfon/dice-pools/refs/heads/main/v13.png)
 
 ### Controls
 
