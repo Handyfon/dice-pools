@@ -1,4 +1,13 @@
 Hooks.once('init', function() {
+	game.settings.register('dicePools', 'useFadedUI', {
+		name: 'Faded UI Style',
+		hint: 'Should the dicepools section behave like standard v13 UI (half opacity until hovered)?',
+		scope: 'client',
+		config: true,
+		default: true,
+		type: Boolean,
+		onChange: onChangeData,
+	});
 	game.settings.register('dicePools', 'data', {
         name: 'data',
         hint: 'stores data',
@@ -26,63 +35,122 @@ Hooks.once('init', function() {
         type: Boolean,
 		onChange: onChangeData,
     });
+
+	console.log("Dicepools initializing...");
 });
 
-Hooks.on('renderPlayerList', function() {
-let DP = document.createElement("div");
-let editMode = game.settings.get('dicePools', 'editMode');
-if(game.user.isGM){
-DP.innerHTML = `
-<div class="dicePoolControls">
-<label class="dicePoolBT" id="dicePoolBTPlus" onclick="dicePools.newDicePoolDialogue()">+</label>
-<label class="dicePoolBT editMode`+editMode+`" id="dicePoolBTEdit" onclick="dicePools.toggleEditMode()"><i class="fa-solid fa-pen-to-square"></i></label>
-<label class="dicePoolBT" id="dicePoolBTEdit"><i class="fa-solid fa-square-info" title="Leftclick to add a dice, Rightclick to remove a dice, Click Mouse wheel to remove all dice from a pool"></i></i></label>
-</div>
-<div class="dicePools" id="dicePools">
-</div>`
-}
-else{
-DP.innerHTML = `
-<div class="dicePools" id="dicePools">
-</div>`
-}
-document.getElementById("player-list").prepend(DP);
-loadDicePools();
-});
+function updateDicePoolMargin() {
+	const section = document.querySelector(".dicePoolsSection");
+	const players = document.getElementById("players");
+	if (!section || !players) return;
 
-async function loadDicePools(){
-	let dicePoolList =  await getdicePoolData();
-	
-	for(let i = 0; i < dicePoolList.length; i++){
-		let DPL = document.createElement("label");
-		let color = "black";
-		var c = dicePoolList[i].color.substring(1);
-		var rgb = parseInt(c, 16);
-		var r = (rgb >> 16) & 0xff;
-		var g = (rgb >>  8) & 0xff;
-		var b = (rgb >>  0) & 0xff;
-
-		var luma = 0.2126 * r + 0.7152 * g + 0.0722 * b; // per ITU-R BT.709
-		//console.log("Luma:" + luma);
-		if (luma < 150) {
-			// pick a different colour
-			color = "white";
-		}
-		DPL.innerHTML = `<label class="dicePoolL" id="dp`+i+`" style="background-color:`+dicePoolList[i].color+`; color:`+color+`;">`+dicePoolList[i].name + " " + dicePoolList[i].amount + "/" + dicePoolList[i].maxAmount +`</label>`;
-		if(game.user.isGM){
-			DPL.addEventListener("mouseup", (event) => {
-			  if (event.button == 0) {
-				dicePools.increaseDicePool(i);
-			  } else if (event.button == 2) {
-				dicePools.decreaseDicePool(i);
-			  } else if (event.button == 1) {
-				dicePools.spillDicePool(i);
-			  }
-			});
-		}
-		document.getElementById("dicePools").append(DPL);
+	if (players.classList.contains("expanded")) {
+		section.style.marginBottom = "-8px";
+	} else {
+		section.style.marginBottom = "-30px";
 	}
 }
+
+Hooks.once('ready', () => {
+	console.log("DICEPOOLS | ready");
+
+	// Initial check
+	updateDicePoolMargin();
+
+	// Add click handler to the expand button
+	const expandButton = document.getElementById("players-expand");
+	if (expandButton) {
+		expandButton.addEventListener("click", () => {
+			// delay since class toggle might happen async
+			setTimeout(updateDicePoolMargin, 50);
+		});
+	}
+});
+
+
+
+Hooks.on('renderPlayers', async function(app, html) {
+	console.log("DicePools | renderSceneControls");
+
+	const sceneControls = html;
+	const leftSideUI = sceneControls.parentElement;
+	const playersAside = document.getElementById("players");
+
+	if (!leftSideUI || !playersAside) return;
+	if (leftSideUI.querySelector(".dicePoolsSection")) return;
+
+	const section = document.createElement("section");
+	section.classList.add("dicePoolsSection");
+	if (game.settings.get('dicePools', 'useFadedUI')) {
+		section.classList.add("faded-ui");
+	}
+	const editMode = game.settings.get('dicePools', 'editMode');
+
+	let controls = "";
+	if (game.user.isGM) {
+		controls = `
+		<div class="sidebar-control-group flexrow" style="pointer-events: auto; text-align: center;">
+			<a class="sidebar-control" id="dicePoolBTPlus" title="Add Pool" onclick="dicePools.newDicePoolDialogue()">
+				<i class="fa-solid fa-plus"></i>
+			</a>
+			<a class="sidebar-control ${editMode ? "active" : ""}" id="dicePoolBTEdit" title="Toggle Edit Mode" onclick="dicePools.toggleEditMode()">
+				<i class="fa-solid fa-pen-to-square"></i>
+			</a>
+			<a class="sidebar-control" id="dicePoolInfoHint" title="Leftclick to add, Rightclick to remove, Middle-click to reset.">
+				<i class="fa-solid fa-circle-info"></i>
+			</a>
+		</div>`;
+	}
+
+	section.innerHTML = `
+		${controls}
+		<ol id="dicePools" class="flexrow"></ol>
+	`;
+
+	leftSideUI.insertBefore(section, playersAside);
+
+	await loadDicePools();
+	updateDicePoolMargin();
+});
+
+async function loadDicePools() {
+	const dicePoolList = await getdicePoolData();
+	const container = document.getElementById("dicePools");
+	if (!container) return;
+
+	container.innerHTML = ""; // verhindert Mehrfach-Render
+
+	for (let i = 0; i < dicePoolList.length; i++) {
+		const pool = dicePoolList[i];
+
+		let label = document.createElement("label");
+		label.classList.add("dicePoolL");
+
+		const hex = pool.color.substring(1);
+		const rgb = parseInt(hex, 16);
+		const r = (rgb >> 16) & 0xff;
+		const g = (rgb >> 8) & 0xff;
+		const b = rgb & 0xff;
+		const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+		const textColor = luma < 150 ? "white" : "black";
+
+		label.id = `dp${i}`;
+		label.style.backgroundColor = pool.color;
+		label.style.color = textColor;
+		label.innerText = `${pool.name} ${pool.amount}/${pool.maxAmount}`;
+
+		if (game.user.isGM) {
+			label.addEventListener("mouseup", (event) => {
+				if (event.button === 0) dicePools.increaseDicePool(i);
+				else if (event.button === 2) dicePools.decreaseDicePool(i);
+				else if (event.button === 1) dicePools.spillDicePool(i);
+			});
+		}
+
+		container.appendChild(label);
+	}
+}
+
 
 window.dicePools = class dicePools{
 		static async newEditDicePoolDialogue(id){
@@ -205,69 +273,79 @@ window.dicePools = class dicePools{
 		saveDicePools(dicePoolList);
 	}
 
-	static async increaseDicePool(id){
-		if(game.settings.get('dicePools', 'editMode')){
+	static async increaseDicePool(id) {
+		if (game.settings.get('dicePools', 'editMode')) {
 			dicePools.newEditDicePoolDialogue(id);
 			return;
 		}
 		let dicePoolList = await getdicePoolData();
-		
-		let content = " inceased the size of the " + dicePoolList[id].name + " pool.";
-		await ChatMessage.create({
-			 content: content,
-		});
-		if(dicePoolList[id].amount+1 > dicePoolList[id].maxAmount)
-			return;
-		else{
-			dicePoolList[id].amount ++;
-		}
+
+		if (dicePoolList[id].amount + 1 > dicePoolList[id].maxAmount) return;
+
+		dicePoolList[id].amount++;
+
+		const content = `
+		<header class="message-header flexrow">
+			<span class="message-flavor">Increased <strong>${dicePoolList[id].name}</strong> Pool</span>
+		</header>
+		<div class="message-content">Pool is now at <strong>${dicePoolList[id].amount}/${dicePoolList[id].maxAmount}</strong>.</div>
+		`;
+
+		await ChatMessage.create({ content });
 		saveDicePools(dicePoolList);
 	}
 
-	static async decreaseDicePool(id){
-		if(game.settings.get('dicePools', 'editMode')){
+	static async decreaseDicePool(id) {
+		if (game.settings.get('dicePools', 'editMode')) {
 			dicePools.newEditDicePoolDialogue(id);
 			return;
 		}
 		let dicePoolList = await getdicePoolData();
-			
-		if(dicePoolList[id].amount-1 < 0)
-			return;
-		else{
-			dicePoolList[id].amount --;	
-			let content = " spent a " + dicePoolList[id].name + " dice. [[/r " +dicePoolList[id].diceFormat+ "]]"
-			await ChatMessage.create({
-			  content: content,
-			});
-		}
+
+		if (dicePoolList[id].amount - 1 < 0) return;
+
+		dicePoolList[id].amount--;
+
+		const content = `
+		<header class="message-header flexrow">
+			<span class="message-flavor">Used a <strong>${dicePoolList[id].name}</strong> Die</span>
+		</header>
+		<div class="dice-formula">Rolling <strong>${dicePoolList[id].diceFormat}</strong></div>
+		<div>[[${dicePoolList[id].diceFormat}]]</div>
+		`;
+
+		await ChatMessage.create({ content });
 		saveDicePools(dicePoolList);
 	}
 	static async toggleEditMode(){
 		await game.settings.set('dicePools', 'editMode', !game.settings.get('dicePools', 'editMode'));
 		onChangeData();
 	}
-
-	static async spillDicePool(id){
-	if(game.settings.get('dicePools', 'editMode')){
+	static async spillDicePool(id) {
+		if (game.settings.get('dicePools', 'editMode')) {
 			dicePools.destroyDicePool(id);
 			return;
 		}
 		let dicePoolList = await getdicePoolData();
-		let content = " spillt <b>"+dicePoolList[id].amount+"</b> dice for the " + dicePoolList[id].name + " pool. ("+dicePoolList[id].diceFormat+")<br><br>";
-		for(let i = dicePoolList[id].amount; i > 0; i--){
-			content += "[[" +dicePoolList[id].diceFormat+ "]]";
-		}
-		await ChatMessage.create({
-			  content: content,
-		});
-		
-		if(dicePoolList[id].amount == 0)
-			return;
-		else{
-			dicePoolList[id].amount = 0;
-		}
+
+		const pool = dicePoolList[id];
+		if (pool.amount === 0) return;
+
+		const rolls = Array(pool.amount).fill(`[[${pool.diceFormat}]]`).join(" ");
+		const content = `
+		<header class="message-header flexrow">
+			<span class="message-flavor">Spilled <strong>${pool.amount}</strong> Dice from <strong>${pool.name}</strong> Pool</span>
+		</header>
+		<div class="dice-formula">Rolling ${pool.diceFormat} x${pool.amount}</div>
+		${rolls}
+		`;
+
+		pool.amount = 0;
+
+		await ChatMessage.create({ content });
 		saveDicePools(dicePoolList);
 	}
+
 }
 
 async function getdicePoolData(){
@@ -280,7 +358,10 @@ async function saveDicePools(dicePoolList){
 }
 
 function onChangeData(){
-	game.users.apps[0].render();
+	const old = document.querySelector(".dicePoolsSection");
+	if (old) old.remove();
+
+	ui.players.render(true); // Triggert renderPlayers erneut
 }
 
 class dicePool{

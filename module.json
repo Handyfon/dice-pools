@@ -1,7 +1,7 @@
 {
   "title": "DicePools",
   "description": "Track Dice Pools",
-  "version": "10.1",
+  "version": "14.0",
   "esmodules": [
     "dicepools.js"
   ],
@@ -10,11 +10,11 @@
   ],
   "socket": true,
   "url": "https://github.com/Handyfon/dice-pools",
-  "manifest": "https://raw.githubusercontent.com/Handyfon/dice-pools/main/module.json",
-  "download": "https://raw.githubusercontent.com/Handyfon/dice-pools/main/dicePools.zip",
+  "manifest": "https://github.com/Handyfon/dice-pools/releases/download/v14.0/module.json",
+  "download": "https://github.com/Handyfon/dice-pools/releases/download/v14.0/dicePools14.0.zip",
   "id": "dicePools",
   "compatibility": {
-    "minimum": "9",
-    "verified": "10"
+    "minimum": "14",
+    "verified": "14"
   }
 }

@@ -26,6 +26,8 @@ label.dicePoolLabel {
 .dicePools {
     padding-bottom: 5px;
     text-align: -webkit-center;
+    padding: 0;
+    margin: 0;
 }
 input#newDicePoolAmount {
     width: 80px;
@@ -35,11 +37,37 @@ label#dicePoolBTEdit {
     font-size: 15px;
 	margin-top:-3px;
 }
-
+#dicePoolBTEdit.active {
+	color: orange;
+}
 .dicePoolBT.editModetrue{
 	color: red;
 }
 .dicePoolControls {
     text-align-last: center;
     margin-top: -5px;
+}
+.dicePoolsSection{
+    pointer-events: all;
+    width: 200px;
+    background: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 6px 8px;
+    margin-bottom: -5px;
+    --background-color: var(--color-cool-5-75);
+    --border-color: var(--color-cool-4);
+    transition: margin-bottom 0.6s ease;
+}
+label.dicePoolL {
+    border-radius: 5px;
+    padding: 2px;
+    display: inline-block;
+    margin-right: 5px;
+    width: fit-content !important;
+    min-width: fit-content;
+}
+ol#dicePools {
+    padding: 0;
+    margin: 0;
 }

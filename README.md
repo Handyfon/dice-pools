@@ -2,7 +2,7 @@
 
 Dice Pools is a module designed for tabletop role-playing games that allows players to add custom dice pools and tension mechanics to their game sessions. This module supports a variety of dice types, including d2, d4, d6, d8, d10, d12, d20, and d100.
 
-**Manifest:https://raw.githubusercontent.com/Handyfon/dice-pools/main/module.json**
+**Manifest:https://github.com/Handyfon/dice-pools/releases/download/v14.0/module.json**
 
 ## Tension Dice
 
